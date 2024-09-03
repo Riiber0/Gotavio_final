@@ -303,3 +303,9 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
 	app.sessionManager.Put(r.Context(), "flash", "Your password have been updated.")
 	http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
+
+func (app *application) search(w http.ResponseWriter, r *http.Request){
+	data := app.newTemplateData(r)
+
+	app.render(w, http.StatusOK, "search.tmpl.html", data)
+}
