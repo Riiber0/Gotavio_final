@@ -305,7 +305,17 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) search(w http.ResponseWriter, r *http.Request){
+	params := httprouter.ParamsFromContext(r.Context())
+	title := params.ByName("title")
+
+	snippets, err := app.snippets.SearchTitle(title)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	data := app.newTemplateData(r)
+	data.Snippets = snippets
 
 	app.render(w, http.StatusOK, "search.tmpl.html", data)
 }
@@ -329,14 +339,6 @@ func (app *application) searchPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := app.snippets.searchTitle(form.Title)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
-
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/search/%s", form.Title), http.StatusSeeOther)
+	
 }

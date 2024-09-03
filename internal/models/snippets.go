@@ -10,7 +10,7 @@ type SnippetModelInterface interface {
 	Insert(title string, content string, expires int) (int, error)
 	Get(id int) (*Snippet, error)
 	Latest() ([]*Snippet, error)
-	searchTitle(title string ) ([]*Snippet, error)
+	SearchTitle(title string ) ([]*Snippet, error)
 }
 
 type Snippet struct {
@@ -94,7 +94,7 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 	return snippets, nil
 }
 
-func (m *SnippetModel) searchTitle(title string ) ([]*Snippet, error) {
+func (m *SnippetModel) SearchTitle(title string ) ([]*Snippet, error) {
 	stmt := "SELECT id, title, content, created, expires FROM snippets WHERE title LIKE '%{" + title + "}%'"
 
 	rows, err := m.DB.Query(stmt)
