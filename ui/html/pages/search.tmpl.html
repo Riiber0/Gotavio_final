@@ -1,8 +1,8 @@
 {{define "title"}}Search{{end}}
 
 {{define "main"}}
-    <h2>Returned Snippets</h2>
     {{if .Snippets}}
+    <h2>Returned Snippets</h2>
      <table>
         <tr>
             <th>Title</th>
@@ -18,7 +18,19 @@
         {{end}}
     </table>
     {{else}}
-        <p>There's nothing to see here... yet!</p>
+		<form action='/search' method='POST'>
+			<input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+			<div>
+				<label>Title:</label>
+				{{with .Form.FieldErrors.title}}
+					<label class='error'>{{.}}</label>
+				{{end}}
+				<input type='text' name='title' value='{{.Form.Title}}'>
+			</div>
+			<div>
+				<input type='submit' value='Publish snippet'>
+			</div>
+		</form>
     {{end}}
 {{end}}
 

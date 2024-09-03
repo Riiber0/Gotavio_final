@@ -39,6 +39,11 @@ type passwordUpdateForm struct {
 	validator.Validator     `form:"-"`
 }
 
+type snippetSearchForm struct {
+	Title               string `form:"title"`
+	validator.Validator `form:"-"`
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.snippets.Latest()
 	if err != nil {
@@ -324,7 +329,7 @@ func (app *application) search(w http.ResponseWriter, r *http.Request){
 }
 
 func (app *application) searchPost(w http.ResponseWriter, r *http.Request) {
-	var form snippetCreateForm
+	var form snippetSearchForm
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
@@ -343,5 +348,4 @@ func (app *application) searchPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/search/%s", form.Title), http.StatusSeeOther)
-	
 }
