@@ -18,7 +18,7 @@
         {{end}}
     </table>
     {{else}}
-		<form action='/search' method='POST'>
+		<form action='/search' method='POST' novalidate>
 			<input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
 			<div>
 				<label>Title:</label>
@@ -28,7 +28,7 @@
 				<input type='text' name='title' value='{{.Form.Title}}'>
 			</div>
 			<div>
-				<input type='submit' value='Publish snippet'>
+				<input type='submit' value='Search'>
 			</div>
 		</form>
     {{end}}

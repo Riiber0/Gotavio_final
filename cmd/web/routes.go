@@ -101,15 +101,15 @@ func (app *application) routes() http.Handler {
 		),
 	)
 	router.Handler(
-		http.MethodGet, "/search/:title",
-		app.sessionManager.LoadAndSave(
-			app.authenticate(http.HandlerFunc(app.search)),
-		),
-	)
-	router.Handler(
 		http.MethodPost, "/search",
 		app.sessionManager.LoadAndSave(
 			app.authenticate(http.HandlerFunc(app.searchPost)),
+		),
+	)
+	router.Handler(
+		http.MethodGet, "/search/:title",
+		app.sessionManager.LoadAndSave(
+			app.authenticate(http.HandlerFunc(app.search)),
 		),
 	)
 

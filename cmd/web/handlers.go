@@ -314,6 +314,8 @@ func (app *application) search(w http.ResponseWriter, r *http.Request){
 	title := params.ByName("title")
 	data := app.newTemplateData(r)
 
+	var form snippetSearchForm
+
 	if len(title)> 0 {
 
 		snippets, err := app.snippets.SearchTitle(title)
@@ -325,6 +327,7 @@ func (app *application) search(w http.ResponseWriter, r *http.Request){
 		data.Snippets = snippets
 	}
 
+	data.Form = form
 	app.render(w, http.StatusOK, "search.tmpl.html", data)
 }
 
