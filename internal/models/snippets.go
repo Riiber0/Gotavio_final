@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+	"fmt"
 )
 
 type SnippetModelInterface interface {
@@ -95,7 +96,8 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 }
 
 func (m *SnippetModel) SearchTitle(title string ) ([]*Snippet, error) {
-	stmt := "SELECT id, title, content, created, expires FROM snippets WHERE title LIKE '%{" + title + "}%'"
+	stmt := "SELECT id, title, content, created, expires FROM snippets WHERE title LIKE '%" + title + "%'"
+	fmt.Print(stmt)
 
 	rows, err := m.DB.Query(stmt)
 	if err != nil {
