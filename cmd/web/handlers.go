@@ -307,15 +307,18 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
 func (app *application) search(w http.ResponseWriter, r *http.Request){
 	params := httprouter.ParamsFromContext(r.Context())
 	title := params.ByName("title")
-
-	snippets, err := app.snippets.SearchTitle(title)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
 	data := app.newTemplateData(r)
-	data.Snippets = snippets
+
+	if len(title)> 0 {
+
+		snippets, err := app.snippets.SearchTitle(title)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
+		data.Snippets = snippets
+	}
 
 	app.render(w, http.StatusOK, "search.tmpl.html", data)
 }
