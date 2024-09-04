@@ -10,11 +10,12 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"snippetbox.jmorelli.dev/internal/models"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // Application hold application-wide dependencies for the web application
@@ -31,14 +32,13 @@ type application struct {
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
-	dsn := flag.String("dsn", "sql3723314:huqAxYftF2@tcp(sql3.freemysqlhosting.net)/sql3723314?parseTime=true", "MySQL data source name")
 	debug := flag.Bool("debug", false, "Debug mode - disabled by default")
 	flag.Parse()
 
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 
-	db, err := openDB(*dsn)
+	db, err := openDB()
 	if err != nil {
 		errorLog.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func main() {
 	formDecoder := form.NewDecoder()
 
 	sessionManager := scs.New()
-	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Store = sqlite3store.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
 	sessionManager.Cookie.Secure = true
 
@@ -87,8 +87,8 @@ func main() {
 	errorLog.Fatal(err)
 }
 
-func openDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", dsn)
+func openDB() (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", "./app.db")
 	if err != nil {
 		return nil, err
 	}
