@@ -18,7 +18,7 @@ body {
 }
 
 header, nav, main, footer {
-    padding: 2px calc((100% - 800px) / 2) 0;
+    padding: 2px calc((100% - 1000px) / 2) 0;
 }
 
 main {
@@ -218,6 +218,54 @@ button:hover {
     color: #4EB722;
     text-decoration: underline;
     cursor: pointer;
+}
+
+.arrow input {
+	 display: none;
+}
+
+.arrow:has(input:checked) .arrow-down {
+	 display: inline-block;
+}
+
+.arrow:has(input:checked) .arrow-up {
+	 display: none;
+}
+
+.arrow-down {
+     height:0px;
+     width:0px;
+     border:none;
+     border-top:5px solid #000000;
+     border-left:5px solid rgba(0,0,0,0);
+     border-right:5px solid rgba(0,0,0,0);
+	 margin-left:6px;
+	 display: none;
+	 transform: translate(0px, 6px);
+}
+
+.arrow-up {
+     height:-10px;
+     width:0px;
+     border:none;
+     border-bottom:5px solid #000000;
+     border-left:5px solid rgba(0,0,0,0);
+     border-right:5px solid rgba(0,0,0,0);
+	 margin-left:6px;
+	 display: inline-block;
+	 transform: translate(0px, 6px);
+}
+
+.view-buttons {
+	display: block;
+}
+
+.view-buttons .left {
+    float: left;
+}
+
+.view-buttons .right {
+    float: right;
 }
 
 .snippet {

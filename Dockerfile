@@ -5,11 +5,13 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-ADD cmd internal ui ./
+COPY cmd ./cmd/
+COPY internal ./internal/
+COPY ui ./ui/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /snippets
+RUN CGO_ENABLED=1 GOOS=linux go build -o /snippets ./cmd/web
 
-EXPOSE 8080
+EXPOSE 4000
 
 CMD ["/snippets"]
 

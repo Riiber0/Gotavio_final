@@ -2,16 +2,48 @@
 
 {{define "main"}}
     {{with .Snippet}}
-    <div class='snippet'>
-        <div class='metadata'>
-            <strong>{{.Title}}</strong>
-            <span>#{{.ID}}</span>
-        </div>
-        <pre><code>{{.Content}}</code></pre>
-        <div class='metadata'>
-            <time>Created: {{humanDate .Created}}</time>
-            <time>Expires: {{humanDate .Expires}}</time>
-        </div>
-    </div>
+		<div class='snippet'>
+			<div class='metadata'>
+				<strong>{{.Title}}</strong>
+				<span>Author: {{.Author}}</span>
+			</div>
+			<pre><code>{{.Content}}</code></pre>
+			<div class='metadata'>
+				<time>Created: {{humanDate .Created}}</time>
+				<time>Expires: {{humanDate .Expires}}</time>
+			</div>
+		</div>
+		<br>
+	{{end}}
+	{{if .IsAuthenticated}}
+		<div class='view-buttons'>
+			<div class='left'>
+				{{if .Saved}}
+					{{with .Snippet}}
+						<form action='/snippet/remove/{{.ID}}' method='POST'>
+					{{end}}
+						<input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+						<button>Remove</button>
+						</form>
+				{{else}}
+					{{with .Snippet}}
+						<form action='/snippet/save/{{.ID}}' method='POST'>
+					{{end}}
+						<input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+						<button>Save</button>
+						</form>
+				{{end}}
+			</div>
+			<div class='right'>
+				{{if .Owner}}
+					{{with .Snippet}}
+						<form action='/snippet/delete/{{.ID}}' method='POST'>
+					{{end}}
+						<input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+						<span><button>Delete Snippet</button></span>
+						</form>
+					</div>
+				{{end}}
+			</div>
     {{end}}
 {{end}}

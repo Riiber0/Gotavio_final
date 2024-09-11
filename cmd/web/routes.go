@@ -48,6 +48,12 @@ func (app *application) routes() http.Handler {
 		),
 	)
 	router.Handler(
+		http.MethodPost, "/snippet/delete/:id",
+		app.sessionManager.LoadAndSave(
+			app.authenticate(app.requireAuthentication(http.HandlerFunc(app.snippetDelete))),
+		),
+	)
+	router.Handler(
 		http.MethodGet, "/user/signup",
 		app.sessionManager.LoadAndSave(
 			app.authenticate(http.HandlerFunc(app.userSignup)),
@@ -107,9 +113,21 @@ func (app *application) routes() http.Handler {
 		),
 	)
 	router.Handler(
-		http.MethodGet, "/search/:title",
+		http.MethodGet, "/saved",
 		app.sessionManager.LoadAndSave(
-			app.authenticate(http.HandlerFunc(app.search)),
+			app.authenticate(http.HandlerFunc(app.getSaved)),
+		),
+	)
+	router.Handler(
+		http.MethodPost, "/snippet/save/:id",
+		app.sessionManager.LoadAndSave(
+			app.authenticate(http.HandlerFunc(app.savePost)),
+		),
+	)
+	router.Handler(
+		http.MethodPost, "/snippet/remove/:id",
+		app.sessionManager.LoadAndSave(
+			app.authenticate(http.HandlerFunc(app.removePost)),
 		),
 	)
 

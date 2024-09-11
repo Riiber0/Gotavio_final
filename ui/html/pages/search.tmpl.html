@@ -7,13 +7,13 @@
         <tr>
             <th>Title</th>
             <th>Created</th>
-            <th>ID</th>
+            <th>Author</th>
         </tr>
         {{range .Snippets}}
         <tr>
             <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>
             <td>{{humanDate .Created}}</td>
-            <td>#{{.ID}}</td>
+            <td>{{.Author}}</td>
         </tr>
         {{end}}
     </table>
@@ -22,12 +22,16 @@
 			<input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
 			<div>
 				<label>Title:</label>
-				{{with .Form.FieldErrors.title}}
-					<label class='error'>{{.}}</label>
-				{{end}}
 				<input type='text' name='title' value='{{.Form.Title}}'>
 			</div>
 			<div>
+				<label>Author:</label>
+				<input type='text' name='author' value='{{.Form.Author}}'>
+			</div>
+			<div>
+				{{with .Form.FieldErrors.search}}
+					<label class='error'>{{.}}</label>
+				{{end}}
 				<input type='submit' value='Search'>
 			</div>
 		</form>

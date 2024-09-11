@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
+	"fmt"
 	"strconv"
 
 	"snippetbox.jmorelli.dev/internal/models"
@@ -41,6 +41,7 @@ type passwordUpdateForm struct {
 
 type snippetSearchForm struct {
 	Title               string `form:"title"`
+	Author               string `form:"author"`
 	validator.Validator `form:"-"`
 }
 
@@ -71,6 +72,8 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	idUser := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
 	snippet, err := app.snippets.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -83,6 +86,12 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
+
+	exists, err := app.snippets.Exists(snippet.ID, idUser)
+
+	if exists { data.Saved = true }
+
+	if data.Snippet.AuthorID == idUser { data.Owner = true }
 
 	app.render(w, http.StatusOK, "view.tmpl.html", data)
 }
@@ -117,7 +126,9 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+	idUser := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	id, err := app.snippets.Insert(form.Title, idUser, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -126,7 +137,25 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+}
+
+func (app *application) snippetDelete(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+
+	err = app.snippets.Delete(id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Snippet deleted!")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
@@ -310,24 +339,22 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) search(w http.ResponseWriter, r *http.Request){
-	params := httprouter.ParamsFromContext(r.Context())
-	title := params.ByName("title")
-	data := app.newTemplateData(r)
+	title := r.URL.Query().Get("title")
+	author := r.URL.Query().Get("author")
 
-	var form snippetSearchForm
-
-	if len(title)> 0 {
-
-		snippets, err := app.snippets.SearchTitle(title)
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
-
-		data.Snippets = snippets
+	snippets, err := app.snippets.Search(title, author)
+	if err != nil {
+		app.serverError(w, err)
+		return
 	}
 
-	data.Form = form
+	if snippets == nil && r.URL.RawQuery != "" {
+		app.sessionManager.Put(r.Context(), "flash", "Not found!")
+	}
+
+	data := app.newTemplateData(r)
+	data.Form = &snippetSearchForm{}
+	data.Snippets = snippets
 	app.render(w, http.StatusOK, "search.tmpl.html", data)
 }
 
@@ -340,8 +367,9 @@ func (app *application) searchPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
-	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+	if ! validator.NotBlank(form.Author) && ! validator.NotBlank(form.Title) {
+		form.CheckField(false, "search", "Please enter a valid title or author")
+	}
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -350,5 +378,78 @@ func (app *application) searchPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/search/%s", form.Title), http.StatusSeeOther)
+	data := app.newTemplateData(r)
+	data.Form = form
+	http.Redirect(w, r, fmt.Sprintf("/search?title=%s&author=%s", form.Title, form.Author), http.StatusSeeOther)
 }
+
+func (app *application) searchView(w http.ResponseWriter, r *http.Request) {
+}
+
+func (app *application) getSaved(w http.ResponseWriter, r *http.Request) {
+	idUser := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	snippets, err := app.snippets.GetSaved(idUser)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
+
+	app.render(w, http.StatusOK, "saved.tmpl.html", data)
+}
+
+func (app *application) savePost(w http.ResponseWriter, r *http.Request) {
+
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+
+	idUser := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	err = app.snippets.Save(id, idUser)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Snippet saved!")
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+}
+
+func (app *application) removePost(w http.ResponseWriter, r *http.Request) {
+
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+
+	idUser := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	err = app.snippets.Remove(id, idUser)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Snippet removed!")
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+}
+
